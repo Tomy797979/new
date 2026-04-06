@@ -1,24 +1,16 @@
 import streamlit as st
-import os
-import subprocess
+import base64
+from github import Github
 
-# GitHub info
+st.title("GitHub Cloud Storage")
+
 USERNAME = st.secrets["USERNAME"]
 REPO = st.secrets["REPO"]
 TOKEN = st.secrets["GITHUB_TOKEN"]
 
-REPO_DIR = "repo"
+g = Github(TOKEN)
+repo = g.get_user(USERNAME).get_repo(REPO)
 
-st.title("GitHub Cloud Storage")
-
-# Clone repo nếu chưa tồn tại
-if not os.path.exists(REPO_DIR):
-
-    clone_url = f"https://{USERNAME}:{TOKEN}@github.com/{USERNAME}/{REPO}.git"
-
-    subprocess.run(["git","clone",clone_url,REPO_DIR])
-
-# Chọn loại file
 folder = st.selectbox(
     "Select folder",
     ["audio","images","video"]
@@ -31,36 +23,27 @@ uploaded_files = st.file_uploader(
 
 if uploaded_files:
 
-    save_path = os.path.join(REPO_DIR,folder)
-
-    os.makedirs(save_path,exist_ok=True)
-
     links = []
 
     for file in uploaded_files:
 
-        file_path = os.path.join(save_path,file.name)
+        content = file.read()
 
-        with open(file_path,"wb") as f:
-            f.write(file.getbuffer())
+        path = f"{folder}/{file.name}"
+
+        try:
+            repo.create_file(path,"upload",content)
+        except:
+            file_data = repo.get_contents(path)
+            repo.update_file(path,"update",content,file_data.sha)
 
         cdn = f"https://cdn.jsdelivr.net/gh/{USERNAME}/{REPO}/{folder}/{file.name}"
 
         links.append(cdn)
 
-    # Git config
-    subprocess.run(["git","config","--global","user.email",EMAIL])
-    subprocess.run(["git","config","--global","user.name",USERNAME])
-
-    os.chdir(REPO_DIR)
-
-    subprocess.run(["git","add","."])
-    subprocess.run(["git","commit","-m","upload assets"],check=False)
-    subprocess.run(["git","push"])
-
     st.success("Upload completed!")
 
-    st.subheader("Direct CDN Links")
+    st.subheader("CDN Links")
 
     for link in links:
-        st.write(link)
+        st.code(link)
