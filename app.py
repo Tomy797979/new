@@ -1,19 +1,18 @@
 import streamlit as st
-import base64
 from github import Github
 
-st.title("GitHub Cloud Storage")
+st.title("GitHub Cloud Storage Upload")
 
 USERNAME = st.secrets["USERNAME"]
-REPO = st.secrets["REPO"]
+REPO_NAME = st.secrets["REPO"]
 TOKEN = st.secrets["GITHUB_TOKEN"]
 
 g = Github(TOKEN)
-repo = g.get_user(USERNAME).get_repo(REPO)
+repo = g.get_user(USERNAME).get_repo(REPO_NAME)
 
 folder = st.selectbox(
     "Select folder",
-    ["audio","images","video"]
+    ["audio","video","images"]
 )
 
 uploaded_files = st.file_uploader(
@@ -32,18 +31,26 @@ if uploaded_files:
         path = f"{folder}/{file.name}"
 
         try:
-            repo.create_file(path,"upload",content)
-        except:
-            file_data = repo.get_contents(path)
-            repo.update_file(path,"update",content,file_data.sha)
+            repo.create_file(
+                path,
+                "upload file",
+                content
+            )
 
-        cdn = f"https://cdn.jsdelivr.net/gh/{USERNAME}/{REPO}/{folder}/{file.name}"
+        except Exception as e:
+
+            st.error(f"File already exists: {file.name}")
+            continue
+
+        cdn = f"https://cdn.jsdelivr.net/gh/{USERNAME}/{REPO_NAME}/{folder}/{file.name}"
 
         links.append(cdn)
 
-    st.success("Upload completed!")
+    if links:
 
-    st.subheader("CDN Links")
+        st.success("Upload completed")
 
-    for link in links:
-        st.code(link)
+        st.subheader("Direct CDN Links")
+
+        for link in links:
+            st.code(link)
