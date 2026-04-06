@@ -6,7 +6,6 @@ import subprocess
 USERNAME = st.secrets["USERNAME"]
 REPO = st.secrets["REPO"]
 TOKEN = st.secrets["GITHUB_TOKEN"]
-EMAIL = st.secrets["EMAIL"]
 
 REPO_DIR = "repo"
 
