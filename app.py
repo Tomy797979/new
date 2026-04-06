@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import subprocess
 
+# GitHub info
 USERNAME = st.secrets["USERNAME"]
 REPO = st.secrets["REPO"]
 TOKEN = st.secrets["GITHUB_TOKEN"]
@@ -9,7 +10,7 @@ EMAIL = st.secrets["EMAIL"]
 
 REPO_DIR = "repo"
 
-st.title("GitHub Cloud Storage Upload")
+st.title("GitHub Cloud Storage")
 
 # Clone repo nếu chưa tồn tại
 if not os.path.exists(REPO_DIR):
@@ -18,10 +19,10 @@ if not os.path.exists(REPO_DIR):
 
     subprocess.run(["git","clone",clone_url,REPO_DIR])
 
-# chọn folder
+# Chọn loại file
 folder = st.selectbox(
     "Select folder",
-    ["audio","images","video","json"]
+    ["audio","images","video"]
 )
 
 uploaded_files = st.file_uploader(
@@ -48,6 +49,7 @@ if uploaded_files:
 
         links.append(cdn)
 
+    # Git config
     subprocess.run(["git","config","--global","user.email",EMAIL])
     subprocess.run(["git","config","--global","user.name",USERNAME])
 
@@ -57,7 +59,7 @@ if uploaded_files:
     subprocess.run(["git","commit","-m","upload assets"],check=False)
     subprocess.run(["git","push"])
 
-    st.success("Upload completed")
+    st.success("Upload completed!")
 
     st.subheader("Direct CDN Links")
 
